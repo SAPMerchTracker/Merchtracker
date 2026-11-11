@@ -6,68 +6,7 @@
 <title>SAP ANZ Field Marketing — Merch Tracker</title>
 <meta http-equiv="Content-Security-Policy"
   content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://api.jsonbin.io;">
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js">
-// ================================================================
-// PHOTO UPLOAD
-// ================================================================
-var _pendingPhoto = null;   // base64 string or null for current form session
-
-function resizePhoto(file, cb){
-  var MAX=130, QUAL=0.80;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    var img=new Image();
-    img.onload=function(){
-      var w=img.width, h=img.height;
-      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
-      else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
-      var cv=document.createElement('canvas');
-      cv.width=w; cv.height=h;
-      cv.getContext('2d').drawImage(img,0,0,w,h);
-      cb(cv.toDataURL('image/jpeg',QUAL));
-    };
-    img.src=e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function setPhotoPreview(b64){
-  _pendingPhoto=b64;
-  if(b64){
-    document.getElementById('photo-prev-img').src=b64;
-    document.getElementById('photo-placeholder').style.display='none';
-    document.getElementById('photo-prev-outer').style.display='block';
-  } else {
-    document.getElementById('photo-prev-img').src='';
-    document.getElementById('photo-placeholder').style.display='';
-    document.getElementById('photo-prev-outer').style.display='none';
-  }
-}
-
-document.getElementById('f-photo').addEventListener('change',function(){
-  var f=this.files[0]; if(!f)return;
-  resizePhoto(f,function(b64){setPhotoPreview(b64);});
-});
-
-document.getElementById('photo-prev-rm').addEventListener('click',function(e){
-  e.stopPropagation(); e.preventDefault();
-  document.getElementById('f-photo').value='';
-  setPhotoPreview(null);
-});
-
-// Drag-and-drop onto the photo-drop area
-(function(){
-  var el=document.getElementById('photo-drop');
-  el.addEventListener('dragover',function(e){e.preventDefault();el.classList.add('drag-over');});
-  el.addEventListener('dragleave',function(){el.classList.remove('drag-over');});
-  el.addEventListener('drop',function(e){
-    e.preventDefault(); el.classList.remove('drag-over');
-    var f=e.dataTransfer.files[0];
-    if(f&&/^image\//.test(f.type)) resizePhoto(f,function(b64){setPhotoPreview(b64);});
-  });
-})();
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <style>
 :root{
@@ -340,13 +279,12 @@ body{font-family:'72 Brand','72',Arial,sans-serif;background:var(--bg);color:var
 .photo-drop-icon{font-size:20px;margin-bottom:3px;line-height:1}
 .photo-drop-hint{font-size:11px;color:var(--gmd);line-height:1.4}
 .photo-drop-hint strong{color:var(--b7)}
-.photo-prev-outer{display:none;position:relative;width:84px;margin:0 auto}
-.photo-prev-img{width:84px;height:84px;object-fit:cover;border-radius:6px;border:1.5px solid var(--glt);display:block}
+.photo-prev-outer{display:none;position:relative;display:inline-block;margin-top:8px}
+.photo-prev-img{width:88px;height:88px;object-fit:cover;border-radius:6px;border:1px solid var(--glt);display:block}
 .photo-prev-rm{position:absolute;top:-7px;right:-7px;background:var(--red);color:#fff;border:2px solid #fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:16px;text-align:center;cursor:pointer;padding:0;font-family:Arial,sans-serif}
 .photo-prev-rm:hover{background:#990000}
-.item-thumb{width:38px;height:38px;object-fit:cover;border-radius:4px;border:1px solid var(--glt);vertical-align:middle;flex-shrink:0}
-.ip-item-thumb{width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid var(--glt);flex-shrink:0}
-.inv-thumb-cell{width:50px;padding-right:6px!important}
+.item-thumb{width:38px;height:38px;object-fit:cover;border-radius:4px;vertical-align:middle;display:block}
+.ip-item-thumb{width:34px;height:34px;object-fit:cover;border-radius:4px;flex-shrink:0;border:1px solid var(--glt)}
 </style>
 </head>
 <body>
@@ -508,7 +446,8 @@ body{font-family:'72 Brand','72',Arial,sans-serif;background:var(--bg);color:var
         <table class="inv-table">
           <thead>
             <tr>
-              <th class="no-sort inv-thumb-cell"></th><th data-sort="name">Item Name</th>
+              <th class="no-sort" style="width:50px;padding-right:4px"></th>
+              <th data-sort="name">Item Name</th>
               <th data-sort="category">Category</th>
               <th data-sort="city">City</th>
               <th data-sort="subloc">Storage Location</th>
@@ -555,17 +494,17 @@ body{font-family:'72 Brand','72',Arial,sans-serif;background:var(--bg);color:var
         <option>Event Materials</option><option>Other</option>
       </select></div>
     <div class="fg"><label for="f-name">Item Name *</label><input type="text" id="f-name" placeholder="e.g. SAP Blue Tote Bag"></div>
-        <div class="fg">
+    <div class="fg">
       <label>Photo <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#aaa">(optional)</span></label>
       <div class="photo-drop" id="photo-drop">
         <input type="file" id="f-photo" accept="image/*">
         <div id="photo-placeholder">
-          <div class="photo-drop-icon">📷</div>
-          <div class="photo-drop-hint"><strong>Click to upload</strong> or drag &amp; drop<br>JPEG · PNG · WEBP — auto-resized</div>
+          <div class="photo-drop-icon">&#128247;</div>
+          <div class="photo-drop-hint"><strong>Click to add photo</strong> or drag &amp; drop &mdash; auto-resized</div>
         </div>
-        <div class="photo-prev-outer" id="photo-prev-outer">
-          <img id="photo-prev-img" class="photo-prev-img" src="" alt="Preview">
-          <button class="photo-prev-rm" id="photo-prev-rm" type="button" title="Remove photo">&#x2715;</button>
+        <div id="photo-prev-outer" style="display:none">
+          <img id="photo-prev-img" class="photo-prev-img" src="" alt="preview">
+          <button class="photo-prev-rm" id="photo-prev-rm" type="button" title="Remove">&#x2715;</button>
         </div>
       </div>
     </div>
@@ -1757,7 +1696,7 @@ function renderInventoryView(){
   // Render rows
   var tbody=document.getElementById('inv-tbody');
   if(!rows.length){
-    tbody.innerHTML='<tr><td colspan="9" class="inv-empty"><p>'+(total===0?'No inventory yet. Use <strong>Add Merch</strong> to get started.':'No items match your filters.')+'</p></td></tr>';
+    tbody.innerHTML='<tr><td colspan="7" class="inv-empty"><p>'+(total===0?'No inventory yet. Use <strong>Add Merch</strong> to get started.':'No items match your filters.')+'</p></td></tr>';
     return;
   }
   tbody.innerHTML=rows.map(function(r){
@@ -1766,7 +1705,7 @@ function renderInventoryView(){
     var stCls=st==='out'?'st-out':st==='warn'?'st-low':'st-good';
     var catColor=CC[it.category]||'#1B90FF';
     return'<tr data-id="'+it.id+'" data-cid="'+r.cid+'">'+
-      '<td class="inv-thumb-cell">'+(it.photo?'<img src="'+it.photo+'" class="item-thumb" alt="">':'')+'</td>'+
+      '<td style="width:50px;padding:6px 4px 6px 14px">'+(it.photo?'<img src="'+it.photo+'" class="item-thumb" alt="">':'')+'</td>'+
       '<td><strong>'+esc(it.name)+'</strong></td>'+
       '<td><span class="cat-badge" style="background:'+catColor+'22;color:'+catColor+'">'+esc(it.category)+'</span></td>'+
       '<td class="city-cell">'+esc(CITIES[r.cid].name)+'<span style="font-size:10px;color:#999"> ('+r.cid.slice(0,3).toUpperCase()+')</span></td>'+
@@ -1855,7 +1794,9 @@ function openAdd(preCityId){
   ['f-cat','f-name','f-qty','f-thresh','f-notes','f-subloc'].forEach(function(id){document.getElementById(id).value='';});
   refreshSublocDL(preCityId||curCity||'');
   document.getElementById('f-by').value=localStorage.getItem('sap_anz_by')||'';
-  setPhotoPreview(null);
+  _pendingPhoto=null;document.getElementById('f-photo').value='';
+  document.getElementById('photo-prev-outer').style.display='none';
+  document.getElementById('photo-placeholder').style.display='';
   openDrawer('drw-add');
 }
 function openEdit(cid,iid){
@@ -1873,7 +1814,10 @@ function openEdit(cid,iid){
   document.getElementById('f-notes').value=item.notes||'';
   document.getElementById('f-subloc').value=item.subloc||'';
   document.getElementById('f-by').value=item.by||localStorage.getItem('sap_anz_by')||'';
-  setPhotoPreview(item.photo||null);
+  _pendingPhoto=item.photo||null;
+  if(_pendingPhoto){document.getElementById('photo-prev-img').src=_pendingPhoto;document.getElementById('photo-prev-outer').style.display='';document.getElementById('photo-placeholder').style.display='none';}
+  else{document.getElementById('photo-prev-outer').style.display='none';document.getElementById('photo-placeholder').style.display='';}
+  document.getElementById('f-photo').value='';
   refreshSublocDL(cid);
   openDrawer('drw-add');
 }
@@ -1896,8 +1840,7 @@ document.getElementById('dadd-save').addEventListener('click',function(){
   var data={name:name,category:cat,quantity:qty,
     threshold:parseInt(document.getElementById('f-thresh').value)||0,
     notes:document.getElementById('f-notes').value.trim(),by:by,
-    subloc:document.getElementById('f-subloc').value.trim(),
-    photo:_pendingPhoto};
+    subloc:document.getElementById('f-subloc').value.trim(),photo:_pendingPhoto||undefined};
   if(editMode)updItem(editCityId,editItemId,data);else addItem(cid,data);
   closeAllDrawers();
   toast(editMode?'Item updated.':'Item added to '+CITIES[cid].name+'.');
@@ -2319,6 +2262,65 @@ document.addEventListener('DOMContentLoaded',function(){
     if(isLocked()) startLockTimer();
     else setTimeout(function(){$id('ag-pw').focus();},50);
   }
+})();
+
+
+// ================================================================
+// PHOTO UPLOAD LOGIC
+// ================================================================
+var _pendingPhoto = null;
+
+function resizePhoto(file, cb){
+  var MAX=130, QUAL=0.80;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width, h=img.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
+      else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      cb(cv.toDataURL('image/jpeg',QUAL));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function setPhotoPreview(b64){
+  _pendingPhoto=b64;
+  if(b64){
+    document.getElementById('photo-prev-img').src=b64;
+    document.getElementById('photo-prev-outer').style.display='';
+    document.getElementById('photo-placeholder').style.display='none';
+  } else {
+    document.getElementById('photo-prev-img').src='';
+    document.getElementById('photo-prev-outer').style.display='none';
+    document.getElementById('photo-placeholder').style.display='';
+  }
+}
+
+document.getElementById('f-photo').addEventListener('change',function(){
+  var f=this.files[0];if(!f)return;
+  resizePhoto(f,function(b64){setPhotoPreview(b64);});
+});
+
+document.getElementById('photo-prev-rm').addEventListener('click',function(e){
+  e.stopPropagation();
+  document.getElementById('f-photo').value='';
+  setPhotoPreview(null);
+});
+
+(function(){
+  var el=document.getElementById('photo-drop');
+  el.addEventListener('dragover',function(e){e.preventDefault();el.classList.add('drag-over');});
+  el.addEventListener('dragleave',function(){el.classList.remove('drag-over');});
+  el.addEventListener('drop',function(e){
+    e.preventDefault();el.classList.remove('drag-over');
+    var f=e.dataTransfer.files[0];
+    if(f&&/^image\//.test(f.type))resizePhoto(f,function(b64){setPhotoPreview(b64);});
+  });
 })();
 
 </script>
