@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAP ANZ Field Marketing — Merch Tracker</title>
 <meta http-equiv="Content-Security-Policy"
-  content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://api.npoint.io;">
+  content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://getpantry.cloud;">
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <style>
@@ -641,11 +641,12 @@ function slColor(sl){return SUBLOC_COLS[sl]||'#002A86';}
 // ║  SETUP — paste your JSONbin credentials here                ║
 // ║  See README at the bottom of this file for instructions     ║
 // ╚══════════════════════════════════════════════════════════════╝
-var NPOINT_ID = '7da370c518950b1b4444';
+var PANTRY_ID  = '8907624a-645c-41c6-8f53-ea347cb47e13';
+var PANTRY_BK  = 'merch';                   // basket name (leave as-is)
 
-var NPOINT_URL = 'https://api.npoint.io/'+NPOINT_ID;
+var PANTRY_URL = 'https://getpantry.cloud/apiv1/pantry/'+PANTRY_ID+'/basket/'+PANTRY_BK;
 
-function isConfigured(){return NPOINT_ID!=='YOUR_NPOINT_ID_HERE';}
+function isConfigured(){return PANTRY_ID!=='YOUR_PANTRY_ID_HERE';}
 
 // Sync status pill
 function setSyncStatus(state,msg){
@@ -674,7 +675,7 @@ function loadFromCloud(cb){
     return;
   }
   setSyncStatus('saving','Connecting…');
-  fetch(NPOINT_URL)
+  fetch(PANTRY_URL)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
       var d=data&&data.cities!==undefined?data:{cities:{},log:[],ts:null};
@@ -697,8 +698,8 @@ function saveDB(){
   if(_saveInFlight){_savePending=true;return;}
   _saveInFlight=true;
   setSyncStatus('saving','Saving…');
-  fetch(NPOINT_URL,{
-    method:'POST',
+  fetch(PANTRY_URL,{
+    method:'PUT',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(db)
   }).then(function(r){
@@ -717,7 +718,7 @@ function saveDB(){
 // ── Poll for team changes every 30 seconds ────────────────────────
 setInterval(function(){
   if(!isConfigured()||_saveInFlight)return;
-  fetch(NPOINT_URL)
+  fetch(PANTRY_URL)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
       var fresh=data&&data.cities!==undefined?data:null;
