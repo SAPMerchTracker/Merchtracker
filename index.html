@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAP ANZ Field Marketing — Merch Tracker</title>
 <meta http-equiv="Content-Security-Policy"
-  content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://api.jsonbin.io;">
+  content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://api.npoint.io;">
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <style>
@@ -641,11 +641,11 @@ function slColor(sl){return SUBLOC_COLS[sl]||'#002A86';}
 // ║  SETUP — paste your JSONbin credentials here                ║
 // ║  See README at the bottom of this file for instructions     ║
 // ╚══════════════════════════════════════════════════════════════╝
-var JBIN_ID  = '6af3c2f4ffd5d16053b82634';
-var JBIN_KEY = '$2a$10$k0VVUgT1KWKL8ZgsrQX8SOaFgR/MpCdWH0aWAquZ0C88jne8RTGDC';
-var JBIN_URL = 'https://api.jsonbin.io/v3/b/'+JBIN_ID;
+var NPOINT_ID = '7da370c518950b1b4444';
 
-function isConfigured(){return JBIN_ID!=='YOUR_BIN_ID_HERE'&&JBIN_KEY!=='YOUR_API_KEY_HERE';}
+var NPOINT_URL = 'https://api.npoint.io/'+NPOINT_ID;
+
+function isConfigured(){return NPOINT_ID!=='YOUR_NPOINT_ID_HERE';}
 
 // Sync status pill
 function setSyncStatus(state,msg){
@@ -674,10 +674,10 @@ function loadFromCloud(cb){
     return;
   }
   setSyncStatus('saving','Connecting…');
-  fetch(JBIN_URL+'/latest',{headers:{'X-Master-Key':JBIN_KEY}})
+  fetch(NPOINT_URL)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
-      var d=data.record&&data.record.cities!==undefined?data.record:{cities:{},log:[],ts:null};
+      var d=data&&data.cities!==undefined?data:{cities:{},log:[],ts:null};
       setSyncStatus('ok','Team Sync Active');
       cb(d);
     })
@@ -697,9 +697,9 @@ function saveDB(){
   if(_saveInFlight){_savePending=true;return;}
   _saveInFlight=true;
   setSyncStatus('saving','Saving…');
-  fetch(JBIN_URL,{
-    method:'PUT',
-    headers:{'Content-Type':'application/json','X-Master-Key':JBIN_KEY},
+  fetch(NPOINT_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify(db)
   }).then(function(r){
     if(!r.ok)throw new Error('HTTP '+r.status);
@@ -717,10 +717,10 @@ function saveDB(){
 // ── Poll for team changes every 30 seconds ────────────────────────
 setInterval(function(){
   if(!isConfigured()||_saveInFlight)return;
-  fetch(JBIN_URL+'/latest',{headers:{'X-Master-Key':JBIN_KEY}})
+  fetch(NPOINT_URL)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
-      var fresh=data.record&&data.record.cities!==undefined?data.record:null;
+      var fresh=data&&data.cities!==undefined?data:null;
       if(fresh&&fresh.ts&&fresh.ts!==db.ts){
         db=fresh;
         saveDB_local();
