@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAP ANZ Field Marketing — Merch Tracker</title>
 <meta http-equiv="Content-Security-Policy"
-  content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://getpantry.cloud;">
+  content="img-src 'self' data:; connect-src 'self' https://cdn.jsdelivr.net https://*.firebasedatabase.app;">
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <style>
@@ -641,12 +641,12 @@ function slColor(sl){return SUBLOC_COLS[sl]||'#002A86';}
 // ║  SETUP — paste your JSONbin credentials here                ║
 // ║  See README at the bottom of this file for instructions     ║
 // ╚══════════════════════════════════════════════════════════════╝
-var PANTRY_ID  = '8907624a-645c-41c6-8f53-ea347cb47e13';
-var PANTRY_BK  = 'merch';                   // basket name (leave as-is)
+var FIREBASE_URL = 'https://marketing-merch-tracker-default-rtdb.asia-southeast1.firebasedatabase.app';
+var FIREBASE_DATA = FIREBASE_URL + '/merch.json';                   // basket name (leave as-is)
 
-var PANTRY_URL = 'https://getpantry.cloud/apiv1/pantry/'+PANTRY_ID+'/basket/'+PANTRY_BK;
+// Firebase Realtime Database — no API key needed in test mode
 
-function isConfigured(){return PANTRY_ID!=='YOUR_PANTRY_ID_HERE';}
+function isConfigured(){return true;}
 
 // Sync status pill
 function setSyncStatus(state,msg){
@@ -675,8 +675,8 @@ function loadFromCloud(cb){
     return;
   }
   setSyncStatus('saving','Connecting…');
-  fetch(PANTRY_URL)
-    .then(function(r){if(r.status===404||r.status===400){return null;}if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+  fetch(FIREBASE_DATA)
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
       var d=data&&data.cities!==undefined?data:{cities:{},log:[],ts:null};
       setSyncStatus('ok','Team Sync Active');
@@ -698,8 +698,8 @@ function saveDB(){
   if(_saveInFlight){_savePending=true;return;}
   _saveInFlight=true;
   setSyncStatus('saving','Saving…');
-  fetch(PANTRY_URL,{
-    method:'POST',
+  fetch(FIREBASE_DATA,{
+    method:'PUT',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(db)
   }).then(function(r){
@@ -718,7 +718,7 @@ function saveDB(){
 // ── Poll for team changes every 30 seconds ────────────────────────
 setInterval(function(){
   if(!isConfigured()||_saveInFlight)return;
-  fetch(PANTRY_URL)
+  fetch(FIREBASE_DATA)
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
     .then(function(data){
       var fresh=data&&data.cities!==undefined?data:null;
